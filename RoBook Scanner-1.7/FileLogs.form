@@ -1,0 +1,18 @@
+# Gambas Form File 2.0
+
+{ Form Form
+  MoveScaled(0,0,48,44)
+  Text = ("")
+  { txtFileLogs TextArea
+    MoveScaled(1,1,46,38)
+    Font = Font["Monospace,10"]
+    Expand = True
+    Text = ("")
+    Wrap = True
+    Border = False
+  }
+  { btnExit ToggleButton
+    MoveScaled(37,39.625,10,4)
+    Text = ("OK")
+  }
+}

@@ -1,0 +1,219 @@
+' Gambas module file
+' This module will handle the panoramic application tools
+' It has 7 modules and can be called anywhere in the program
+' It supports libpano and pano13 libraries as to the date of programming
+
+
+' Christopher M Coballes
+' Information Technology Officer II
+' Data Center,Main Library,UP Diliman
+
+' Hugin IS a panorama photo stitching program.
+' 
+' This package includes command - LINE tools used by hugin AND other packages FOR image stitching 
+'AND High Dynamic Range(HDR) images:
+' 
+'  * align_image_stack - Align overlapping images FOR HDR creation.
+'  * autooptimiser - Optimize image positions.
+'  * calibrate_lens - Lens calibration tool
+'  * cpclean - Remove wrong control points
+'  * fulla - Correct lens distortion, vignetting, AND
+'                        chromatic aberration.
+'  * hugin_hdrmerge - Merge overlapping images.
+'  * nona - Stitch a panorama image.
+'  * vig_optimize - Determine the radial vignetting.
+'  * pto2mk - CREATE a makefile FOR stitching.
+'  * matchpoint - Run feature detection AND extraction
+'  * celeste_standalone - Remove cloud - LIKE control points.
+
+' Additional CLI command line for Hugin
+'  * enblend
+'  * panostart
+'  * enfuse
+'  * pano_modify
+
+'=================================================================================================================================
+'Control Point Generation
+PUBLIC SUB tools1(spath AS String) AS String
+  
+  
+  
+END
+
+'Project File Modification
+PUBLIC SUB tools2(spath AS String) AS String
+  
+  
+  
+END
+
+'Control Point Pruning
+PUBLIC SUB tools3(spath AS String) AS String
+
+  
+END
+
+'Optimization
+PUBLIC SUB tools4(spath AS String) AS String
+  
+  
+  
+END
+
+'Rendering
+PUBLIC SUB tools5(spath AS String) AS String
+
+  
+END
+
+
+
+' - o project.pto * .jpg
+'nona(spath AS String, TempSpath AS String) AS String
+PUBLIC SUB nona(spath AS String, TempSpath AS String, countN AS Integer) AS String
+DIM nonaOUT AS String
+
+'nona  -z PACKBITS  -r ldr -m TIFF_m -o Test -i 0 /tmp/huginpto_f07wcP
+EXEC ["nona", "-z", "PACKBITS", "-r", "ldr", "-m", "TIFF_m", "-o", spath, "-i", countN, TempSpath] TO nonaOUT
+RETURN nonaOUT  
+
+END
+
+'enblend(imageOne AS String, imageTwo AS String) AS String
+PUBLIC SUB enblend(imageOne AS String, imageTwo AS String) AS String
+  'DIM cpfindOUT, outImagePath, inImagePath AS String 
+  
+DIM enblendOUT AS String
+'enblend -g -m 1500 -o gigapixel_out.tif gigapixel1.tif gigapixel2.tif
+'enblend --compression 100 -f3000x2011 -o Test.jpg Test0000.tif Test0001.tif Test0002.tif Test0003.tif Test0004.tif 
+EXEC ["enblend", "--compression", "100", "-f3000x2011", "-o", imageOne, imageTwo] TO enblendOUT   
+RETURN enblendOUT
+
+END
+
+'----------------------------------------------------------------------------------------------------------------------------
+'Stitching Gigabit Files
+'----------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB gigatile(spath AS String) AS String
+DIM gigatileOUT AS String
+'gigatile -o project.pto.mk -p prefix project.pto
+'EXEC ["gigatile", "-o", project.pto.mk, "-p", "prefix", project.pto] TO gigatileOUT
+
+END
+
+PUBLIC SUB enfuse(imageOne AS String, imageTwo AS String) AS String
+
+END
+
+
+'-----------------------------------
+'We will use the same project file FOR all single steps.We always overwrite the same project file.You can also use another filename FOR every step.
+
+'---------------------------------------------------------------------------------------------------------------
+'1)Generate pto file
+'-------------------------------------------------------------------------------------------------------------
+PUBLIC SUB pto_gen(spath AS String) AS String
+DIM potOUT AS String
+    'pto_gen - o project.pto * .jpg
+EXEC [] TO potOUT
+END 
+
+
+'---------------------------------------------------------------------------------------------------------------
+'2) Find control points with cpfind, with celeste to ignore clouds 
+'-------------------------------------------------------------------------------------------------------------
+PUBLIC SUB cpfind(spath AS String, chooseRow AS String) AS String
+  DIM cpfindOUT, outImagePath, inImagePath AS String 
+  ' cpfind --celeste -o output.pto input.pto
+  SELECT CASE chooseRow
+  
+  CASE "celeste"
+    EXEC ["cpfind", "--celeste", "-o", outImagePath, inImagePath] TO cpfindOUT
+  CASE "multirow"
+   EXEC ["cpfind", "--celeste", "-o", outImagePath, inImagePath] TO cpfindOUT   
+END SELECT 
+   RETURN spath 
+END
+
+'-------------------------------------------------------------------------------------------------------------
+'-------------------------------------------------------------------------------------------------------------
+PUBLIC SUB enfused(spath AS String) AS String
+  
+  
+  
+END
+
+
+'---------------------------------------------------------------------------------------------------------------
+'3) Control point cleaning 
+'---------------------------------------------------------------------------------------------------------------
+PUBLIC SUB cpclean(spath AS String) AS String
+  DIM cpcleanOUT, outImagePath, inImagePath AS String
+   'cpclean - o project.pto project.pto
+EXEC ["cpclean", "-o", outImagePath, inImagePath] TO cpcleanOUT
+  
+END
+
+'---------------------------------------------------------------------------------------------------------------
+'4)Find vertical lines
+'---------------------------------------------------------------------------------------------------------------
+PUBLIC SUB linefind(spath AS String)
+ '   linefind - o project.pto project.pto
+  
+  
+  
+END
+
+'---------------------------------------------------------------------------------------------------------------
+'5)Optimize position, DO photometric optimization, straighten panorama AND SELECT suitable OUTPUT projection
+'---------------------------------------------------------------------------------------------------------------
+PUBLIC SUB autooptimiser(spath AS String, chooseOptimizer AS String) AS String
+DIM optimizerOUT, outImagePath, inImagePath AS String
+SELECT CASE chooseOptimizer 
+CASE "one" 
+'  autooptimiser - a - m - l - s - o project.pto project.pto  
+EXEC ["autooptimiser", "-a", "-m", "-l", "-s", "-o", outImagePath, inImagePath] TO optimizerOUT 
+
+CASE "two"
+
+CASE "three"
+
+END SELECT 
+
+RETURN spath 
+
+END
+
+
+'---------------------------------------------------------------------------------------------------------------
+'6)Calculate optimal crop AND optimal size
+'---------------------------------------------------------------------------------------------------------------
+PUBLIC SUB pano_modify(spath AS String) AS String
+'   pano_modify - - canvas = AUTO - - crop = AUTO - o project.pto project.pto
+  
+  
+END
+
+'---------------------------------------------------------------------------------------------------------------
+'7)Now CREATE stitching makefile
+'---------------------------------------------------------------------------------------------------------------
+PUBLIC SUB pto2mk(spath AS String) AS String
+'   pto2mk - o project.mk - p prefix project.pto
+  
+END
+
+'---------------------------------------------------------------------------------------------------------------
+'8) AND FINALLY CREATE the final panorama
+'---------------------------------------------------------------------------------------------------------------
+PUBLIC SUB finalMake(spath AS String) AS String
+  
+'   make - f project.mk all 
+  
+END
+
+
+
+
+
+
+

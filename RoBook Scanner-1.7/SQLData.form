@@ -1,0 +1,65 @@
+# Gambas Form File 2.0
+
+{ Form Form
+  MoveScaled(0,0,98,73)
+  Text = ("")
+  { HSplit1 HSplit
+    MoveScaled(0,0,97,71)
+    Expand = True
+    { PanelButtons Panel
+      MoveScaled(0,1,36,41)
+      Arrangement = Arrange.Vertical
+      { HPanel1 HPanel
+        MoveScaled(0,0,20,4)
+        AutoResize = True
+        { ToolButtonRemove ToolButton
+          MoveScaled(5,-1,4,4)
+          ToolTip = ("Remove Image from database")
+          Text = ("")
+        }
+        { ToolButtonAdd ToolButton
+          MoveScaled(0,0,4,4)
+          ToolTip = ("Add image to database")
+          Text = ("")
+        }
+        { Separator1 Separator
+          MoveScaled(8,0,1,4)
+        }
+        { Separator2 Separator
+          MoveScaled(14,0,1,4)
+        }
+        { ToolButtonUpdate ToolButton
+          MoveScaled(15,0,4,4)
+          ToolTip = ("Update image description")
+          Text = ("")
+        }
+        { ToolButtonExport ToolButton
+          MoveScaled(9,1,4,4)
+          ToolTip = ("Export image from database")
+          Text = ("")
+        }
+      }
+      { GridViewImages GridView
+        MoveScaled(2,11,32,26)
+        Expand = True
+        Header = GridView.Both
+        Border = False
+      }
+    }
+    { VSplit1 VSplit
+      MoveScaled(38,2,37,44)
+      { TextAreaDescription TextArea
+        MoveScaled(13,0,23,7)
+        Text = ("")
+        Wrap = True
+        Border = False
+      }
+      { ScrollView1 ScrollView
+        MoveScaled(0,7,36,37)
+        { PictureBoxImage PictureBox
+          MoveScaled(0,-3,35,34)
+        }
+      }
+    }
+  }
+}

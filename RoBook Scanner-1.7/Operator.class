@@ -1,0 +1,21 @@
+' Gambas class file
+
+
+PUBLIC SUB Button1_Click()
+  Operator.Show()
+  Operator.Center()
+  Operator.Enabled = TRUE
+  ME.Close()
+
+END
+
+PUBLIC SUB Form_Open()
+DIM OperatorPhoto AS String
+OperatorPhoto = "/home/robook/operatorPhotos/NEU.jpg"
+IF Exist(OperatorPhoto) THEN 
+OperatorPhoto.Picture = Picture.Load(OperatorPhoto)
+ELSE 
+Functions.RoBookSay(" No operator's photo.. ")
+ENDIF  
+
+END

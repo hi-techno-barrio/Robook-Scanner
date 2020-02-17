@@ -1,0 +1,307 @@
+' Gambas class file
+PUBLIC point1X AS Integer
+PUBLIC point1Y AS Integer 
+PUBLIC point2X AS Integer 
+PUBLIC point2Y AS Integer
+PUBLIC flagGRAPHICS AS String
+
+PUBLIC SUB Form_Open()
+   Draw.Begin(dwgImage) 
+   Draw.ForeColor = Color.Cyan
+   Draw.LineWidth = 2  
+
+END
+'================================================================================================================================
+' MOUSE EVENT DRIVEN
+'================================================================================================================================
+
+'MOUSE DOWN
+PUBLIC SUB dwgImage_MouseDown() 
+  ' DisplayMono.Visible = FALSE
+   ' Main.Show()
+    'dwgImage.Visible = TRUE
+   ' dwgImage.Show()
+IF graphicsMode() THEN 
+  'DisplayAndLoadImage("/home/robook/Desktop/good.jpg")
+  'Draw.Begin(dwgImage)
+  cmd.mpresentClick = "down"
+  point1X = Mouse.X
+  point1y = Mouse.Y
+  'Message.Info("here Cobe")
+
+  IF (cmd.mpreviousClick = "up") OR (cmd.mpreviousClick = "no") THEN 
+   dwgImage.Refresh()
+   drawPoint(point1X, point1y)
+   'txtString.Text = point1X & "-" & point1Y
+'   btnStereoCapture.Text = "X1=:" & point1X & " - " & "Y1 =:" & point1Y 
+   cmd.mouserClick = TRUE
+  ' txtString3.Text = previousClick
+   'previousClick = "down"
+  ENDIF 
+  
+    'txtString.Text = point1X & "-" & point1Y
+ '    btnStereoCapture.Text = "X1=:" & point1X & " - " & "Y1 =:" & point1Y 
+     
+    
+ cmd.mpreviousClick = "down"
+ENDIF ' end to graphics
+  'Draw.End()
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+'MOUSE MOVE
+PUBLIC SUB dwgImage_MouseMove()
+   DIM shadowX, shadowY AS Integer
+   DIM pImage AS Image
+   
+IF graphicsMode() THEN 
+     cmd.mpresentClick = "move"
+   
+    dwgImage.Refresh()
+    
+  
+    
+ ' IF (cmd.mouserClick = TRUE) THEN 
+      dwgImage.Refresh()
+      point2X = Mouse.X
+      point2y = Mouse.Y
+     ' Message.Info("Hello!")
+      
+     mouseX1.Text = "X1=:" & point1X 
+     mouseY1.Text = "Y1 =:" & point1Y 
+     mouseX2.Text = "X2 =:" & point2X 
+     mouseY2.Text = "Y2 =:" & point2Y
+      
+ ' ENDIF 
+  'btnRightCapture.Text = cmd.mpreviousClick
+
+  cmd.mpreviousClick = "move"
+   
+ENDIF 
+
+END
+
+
+'----------------------------------------------------------------------------------------------------------------------
+'MOUSE UP
+PUBLIC SUB dwgImage_MouseUp()
+
+cmd.mouserClick = FALSE
+cmd.mpresentClick = "up"
+
+IF graphicsMode() THEN 
+   Draw.Begin(dwgImage)
+   
+  IF cmd.mpreviousClick = "move" THEN 
+     'dwgImage.Refresh()
+     Draw.ForeColor = Color.Cyan
+     Draw.LineWidth = 1
+     Draw.LineStyle = 3
+     drawPoint(point2X, point2Y)
+     
+     
+    ' Draw.Rect(point1X, point1Y, point2X, point2Y)
+     dwgImage.BackGround = Color.Transparent 
+     dwgImage.Cached = TRUE
+     Draw.Rect(point1X, point1Y, Abs(point2X - point1X), Abs(point2Y - point1Y))
+     'CONTINUE 
+    ' About.Visible = TRUE
+     'WHILE NOT (checkPresentClick = "btnRight")
+     'CONTINUE 
+    ' WEND 
+     
+     'Message.Info("Crop")
+  ENDIF 
+   
+   flagGRAPHICS = "none"
+   mouserCase("/home/robook/Desktop/good.jpg", flagGRAPHICS)
+   dwgImage.Refresh()
+   
+ ENDIF 
+
+ cmd.mpreviousClick = "up"
+ Draw.End
+END
+
+
+'-------------------------------------------------------------------------------------------------------------------------------
+'mouserCase(spath AS String, imgLayout AS String) AS String
+'-------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mouserCase(spath AS String, imgLayout AS String) AS String
+DIM pImage AS Image
+DIM CropArea AS DrawingArea
+DIM Degrees AS Float
+DIM direction AS Boolean
+'  SELECT CASE flagGRAPHICS
+SELECT CASE imgLayout 
+
+CASE "deskew"
+ Draw.Line(point1X, point1Y, point2X, point2Y)
+ Degrees = ImageProcessing.getAngle(point1X, point1Y, point2X, point2Y)
+ direction = ImageProcessing.getRotationDirection(point1X, point1Y, point2X, point2Y)
+ Message.Info("Deskew angle:=" & Degrees)
+ ImageProcessing.rotateImage(spath, Degrees, direction)
+ 'displayCroppedArea("/home/robook/Desktop/Test.jpg", dwgImage)
+
+CASE "crop"
+ Draw.Rect(point1X, point1Y, Abs(point2X - point1X), Abs(point2Y - point1Y))
+ ImageProcessing.cropEntirePage(spath, dwgImage, point1X, point1Y, point2X, point2Y)
+' DisplayAndLoadImage("/home/robook/Desktop/Test36.jpg")
+displayCroppedArea(spath, dwgImage)
+
+CASE "clipcrop"
+'copy portion of an image area
+ Draw.Rect(point1X, point1Y, Abs(point2X - point1X), Abs(point2Y - point1Y))
+ ImageProcessing.cropEntirePage(spath, dwgImage, point1X, point1Y, point2X, point2Y)
+' DisplayAndLoadImage("/home/robook/Desktop/Test36.jpg")
+displayCroppedArea(spath, dwgImage)
+ 
+CASE "none"
+ 'Draw.Rect(point1X, point1Y, point2X, point2Y)
+ 'DisplayCopy.Picture = Picture.Load("/home/robook/Desktop/Test.jpg")
+ 'displayCroppedArea(spath, dwgImage)
+ 
+ END SELECT
+
+  
+END
+
+'--------------------------------------------------------------------------------------------------
+'PUBLIC SUB DisplayAndLoadImage(spathImage AS String) AS Image
+'get the angle of skew of an image
+'--------------------------------------------------------------------------------------------------
+PUBLIC SUB DisplayAndLoadImage(spathImage AS String) AS Image
+DIM hImage AS Image
+'spathImage = "/home/robook/Desktop/OCRTest/good.jpg"
+hImage = Image.Load(spathImage)
+hImage = hImage.Stretch(dwgImage.Width, dwgImage.Height)
+'hImage.Stretch(dwgImage.Width, dwgImage.Height)
+'hImage = hImage.Rotate(90)
+'dwgImage.Resize(hImage.Width, hImage.Height)
+'dwgImage.Resize(hImage.Width, hImage.Height)
+'dwgImage.Clear()
+dwgImage.Refresh()
+Draw.Begin(dwgImage)
+Draw.Image(hImage, 0, 0)
+'hImage.Save(saveImagePath)
+'Draw.End
+RETURN hImage
+END
+
+
+'--------------------------------------------------------------------------------------------------
+'PUBLIC SUB DisplayAndLoadImage(spathImage AS String) AS Image
+'get the angle of skew of an image
+'--------------------------------------------------------------------------------------------------
+PUBLIC SUB displayCroppedArea(spathImage AS String, CropArea AS DrawingArea) AS Image
+DIM hImage AS Image
+'spathImage = "/home/robook/Desktop/OCRTest/good.jpg"
+hImage = Image.Load(spathImage)
+hImage = hImage.Stretch(CropArea.Width, CropArea.Height)
+CropArea.Refresh()
+Draw.Begin(CropArea)
+Draw.Image(hImage, 0, 0)
+'Draw.End
+RETURN hImage
+END
+
+'--------------------------------------------------------------------------------------------------
+'PUBLIC SUB DisplayAndLoadImage(spathImage AS String) AS Image
+'get the angle of skew of an image
+'--------------------------------------------------------------------------------------------------
+PUBLIC SUB graphicsMode() AS Boolean
+  DIM noGraphics AS Boolean
+ ' IF NOT ((SettingOperation = "shootingMode") AND (SettingOperation = "lblCapture"))
+  noGraphics = TRUE
+ ' ELSE 
+ ' noGraphics = FALSE
+ ' ENDIF 
+  RETURN noGraphics
+END
+
+
+'--------------------------------------------------------------------------------------------------
+'PUBLIC SUB DisplayAndLoadImage(spathImage AS String) AS Image
+'get the angle of skew of an image
+'--------------------------------------------------------------------------------------------------
+PUBLIC SUB drawPoint(x AS Integer, y AS Integer)
+'Draw.ForeColor = Color.White-I see in every draw object/figure a memory area need to setup.. :)
+  Draw.Begin(dwgImage)
+  Draw.Point(X + 1, y)
+  Draw.Point(X - 1, y)
+  Draw.Point(X, Y + 1)
+  Draw.Point(X, Y - 1)
+  Draw.End
+
+END
+
+PUBLIC SUB btnCrop_Click()
+
+ flagGRAPHICS = "crop"
+ 'switchMenu(TRUE)
+  'DisplayAndLoadImage("/home/robook/Desktop/good.jpg")
+ 'ChangeLabel("noButton", SettingOperation, NewGlobalZoomValue)
+END
+
+PUBLIC SUB btnDeskew_Click()
+ flagGRAPHICS = "deskew"
+ '  DisplayAndLoadImage("/home/robook/Desktop/good.jpg")
+
+END
+
+
+PUBLIC SUB btnDewarp_Click()
+
+
+ flagGRAPHICS = "dewarp"
+ 'switchMenu(TRUE)
+ '  DisplayAndLoadImage("/home/robook/Desktop/good.jpg")
+
+
+END
+
+
+
+PUBLIC SUB btnRefresh_Click()
+
+  'DrawingArea.Refresh()
+
+END
+
+PUBLIC SUB WhiteIsland()
+' DIM hImage AS Picture
+' 
+'   hImage = Picture.Load(strPathFile)
+'   daImage.Width = hImage.Width
+'   daImage.Height = hImage.Height
+'   daImage.BackGround = Color.Green
+'   daImage.Cached = TRUE
+'   Draw.Begin(daImage)
+'   Draw.Clear
+'   Draw.Picture(hImage, 0, 0, hImage.Width, hImage.Height)
+'   Draw.End
+' 
+' CATCH
+'   ME.Text = Error.Text
+END
+
+PUBLIC SUB btnExit_Click()
+
+  
+ Graphics.Visible = FALSE
+  Main.Visible = TRUE
+  Main.Enabled = TRUE
+
+END
+
+PUBLIC SUB btnZoom_Click()
+
+  
+
+END
+
+PUBLIC SUB btnRotate_Click()
+
+  
+
+END

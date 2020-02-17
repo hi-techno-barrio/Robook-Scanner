@@ -1,0 +1,332 @@
+# Gambas Form File 2.0
+
+{ Form Form
+  MoveScaled(0,0,170,88)
+  Background = &HFFFFFF&
+  Text = ("RoBook Scanner")
+  Maximized = True
+  AutoResize = True
+  { mnuFile Menu
+    Text = ("&File")
+    { mnuNewProject Menu
+      Text = ("&New Project")
+      Picture = Picture["icon:/32/new"]
+    }
+    { mnuOpenProject Menu
+      Text = ("&Open Project")
+      Picture = Picture["icon:/32/open"]
+    }
+    { mnuSaveProjectas Menu
+      Text = ("&Save Project as")
+      Picture = Picture["icon:/32/save-as"]
+    }
+    { mnuSaveProject Menu
+      Text = ("&Save Project")
+      Picture = Picture["icon:/32/save"]
+    }
+    { mnuCloseProject Menu
+      Text = ("&Close Project")
+    }
+    { mnuExit Menu
+      Text = ("&Exit")
+      Picture = Picture["icon:/32/quit"]
+    }
+  }
+  { mnuEdit Menu
+    Text = ("&Edit")
+    Picture = Picture["icon:/32/edit"]
+    { mnuConvertImage Menu
+      Text = ("&Convert Image")
+      { mnu Menu
+        Text = ("&Convert to PDF")
+      }
+      { mnuDejaVu Menu
+        Text = ("&Convert to DejaVu")
+      }
+      { mnuTiff Menu
+        Text = ("&Convert to TIFF")
+      }
+      { mnuBMP Menu
+        Text = ("&Convert to BMP")
+      }
+      { mnuJPG Menu
+        Text = ("&Default JPG")
+      }
+    }
+    { mnuBindingImages Menu
+      Text = ("&Binding Images")
+      { mnuImageBindingpdf Menu
+        Text = ("&Image Binding(*.pdf)")
+      }
+      { mnuImageBindingdjvu Menu
+        Text = ("&Image Binding(*.djvu)")
+      }
+      { mnuBindingImagetiff Menu
+        Text = ("&ImageBinding(*.tiff)")
+      }
+      { mnuImageBindingjpg Menu
+        Text = ("&Image Binding(*.jpeg)")
+      }
+    }
+    { mnuOCRImage Menu
+      Text = ("&OCR Image")
+      { mnuOCREnabled Menu
+        Text = ("&OCR Enabled")
+      }
+      { mnuOCRDisabled Menu
+        Text = ("&OCR Disabled")
+      }
+    }
+    { mnuProcessImage Menu
+      Text = ("&Process Image")
+      { mnuGraphicsEditor Menu
+        Text = ("&Graphics Editor")
+      }
+      { mnuAdvanceProcessing Menu
+        Text = ("&Advance Image Processing")
+        { mnuDewarping Menu
+          Text = ("&Image Dewarping")
+        }
+        { mnuAutoSkew Menu
+          Text = ("&Automatic Skewing")
+        }
+        { mnuPageAlignment Menu
+          Text = ("&Page Alignment")
+        }
+      }
+      { mnuDeskewImage Menu
+        Text = ("&DeskewImage")
+        { mnuAutomaticDeskew Menu
+          Text = ("&Automatic Deskew")
+        }
+        { mnuManualDeskew Menu
+          Text = ("&Manual Deskew")
+        }
+      }
+      { mnuCropImage Menu
+        Text = ("&Crop Image")
+        Shortcut = "Ctrl+C"
+      }
+    }
+    { mnuImageColorFormat Menu
+      Text = ("&Image Color Format")
+      { mnuNormalizeImage Menu
+        Text = ("&Normalize Image")
+      }
+      { mnuGreyscaleImage Menu
+        Text = ("&Greyscale Image")
+      }
+      { mnuBitonal Menu
+        Text = ("&Bitonal Image")
+      }
+      { mnuTextEnhancer Menu
+        Text = ("&Text Enhancer")
+        { mnuCleanerOne Menu
+          Text = ("&Cleaner One")
+        }
+        { mnuCleanerTwo Menu
+          Text = ("&Cleaner Two")
+        }
+        { mnuCleanerThree Menu
+          Text = ("&Cleaner Three")
+        }
+        { mnuDefault Menu
+          Text = ("&Default Cleaner")
+        }
+      }
+    }
+    { mnuInsert Menu
+      Text = ("&Insert Image")
+    }
+    { mnuDelete Menu
+      Text = ("&Delete Image")
+    }
+    { mnuResetCameraImage Menu
+      Text = ("&Reset  Image Queue")
+    }
+  }
+  { mnuView Menu
+    Text = ("&View")
+    { mnuOCROutput Menu
+      Text = ("&OCR Output")
+      { mnuOCRPDF Menu
+        Text = ("&OCR PDF")
+      }
+      { mnuOCRHTML Menu
+        Text = ("&OCR HTML")
+      }
+      { mnuOCRText Menu
+        Text = ("&OCR Text")
+      }
+    }
+    { mnuOperator Menu
+      Text = ("&Operator")
+    }
+    { mnuFileLogs Menu
+      Text = ("&File Logs")
+    }
+    { mnuDjVu Menu
+      Text = ("&DjVu")
+    }
+    { mnuPDF Menu
+      Text = ("&PDF")
+    }
+    { mnuExecLogs Menu
+      Text = ("&Exec Logs")
+    }
+  }
+  { mnuTools Menu
+    Text = ("&Tools")
+    Picture = Picture["icon:/32/options"]
+    { mnuCameraSettings Menu
+      Text = ("&Camera Settings")
+      Picture = Picture["icon:/32/image"]
+      { mnuCameraFlash Menu
+        Text = ("&Camera Flash")
+        { mnuFlashOn Menu
+          Text = ("&mnuFlashOn")
+        }
+        { mnuFlashOff Menu
+          Text = ("&mnuFlashOff")
+        }
+      }
+      { mnuCameraZoom Menu
+        Text = ("&Camera Zoom")
+        Shortcut = "Ctrl+Z"
+      }
+    }
+    { mnuCameraConfigurations Menu
+      Text = ("&Camera  Configurations")
+    }
+    { mnuSystemSettings Menu
+      Text = ("&System Settings")
+    }
+    { mnuConsole Menu
+      Text = ("&Console")
+      Picture = Picture["icon:/32/terminal"]
+    }
+    { mnuCalendar Menu
+      Text = ("&Calendar")
+    }
+    { mnuRoboticScanner Menu
+      Text = ("&Robotic Scanner")
+      { mnuRoBookArm Menu
+        Text = ("&RoBook Scanner II(Planetary)")
+      }
+      { mnuRobotScanner Menu
+        Text = ("&RoBook Scanner III")
+      }
+    }
+    { mnuSerialCom Menu
+      Text = ("&Serial Com Port")
+    }
+    { mnuStorageServer Menu
+      Text = ("&Storage Servers")
+      { mnuDBase Menu
+        Text = ("&SQL DBase Server")
+      }
+      { mnuFTP Menu
+        Text = ("&FTP Server")
+      }
+      { mnuWebDav Menu
+        Text = ("&WebDav Server")
+      }
+      { mnuPostGreSQL Menu
+        Text = ("&PostgreSQL")
+      }
+      { mnuSVNserver Menu
+        Text = ("&SVN Server")
+      }
+    }
+  }
+  { mnuHelp Menu
+    Text = ("&Help")
+    { mnuVideoTutorial Menu
+      Text = ("&Video Tutorials")
+    }
+    { mnuQuickGuide Menu
+      Text = ("&Quick Guide")
+    }
+    { mnuDocument Menu
+      Text = ("&Document")
+    }
+    { mnuAbout Menu
+      Text = ("&About the Author")
+    }
+  }
+  { PictureBox1 PictureBox
+    MoveScaled(1,-7,13,7)
+    Picture = Picture["gambas-robookscan.png"]
+    Stretch = True
+  }
+  { lblRoBook Label
+    MoveScaled(24,-10,66,9)
+    Font = Font["Bold,+12"]
+    Background = &HFFFFFF&
+    Foreground = &H800040&
+    Text = ("RoBook Scanner")
+    Alignment = Align.Center
+  }
+  { frmDirectory Frame
+    MoveScaled(82,-10,76,9)
+    Text = ("Project Directory")
+    { CheckBox1 CheckBox
+      MoveScaled(2,2.5714,13,2)
+      Text = ("Create Path")
+    }
+    { CheckBox3 CheckBox
+      MoveScaled(2,6,15,2)
+      Text = ("Default Path")
+    }
+    { frmDirectory2 Frame
+      MoveScaled(16.5714,1.5714,31,6)
+      Text = ("Create Path")
+      { btnFilename Button
+        MoveScaled(16,2,13,3)
+        Text = ("Filename")
+      }
+      { btnDirectory Button
+        MoveScaled(2,2.2857,13,2)
+        Text = ("File Directory")
+      }
+    }
+  }
+  { Txtdebug TextBox
+    MoveScaled(15,-4,142,2)
+    Text = ("")
+  }
+  { frmMain Frame
+    MoveScaled(0,0,170,88)
+    Text = ("")
+    { DisplayMono PictureBox
+      MoveScaled(13,0,133,84)
+      Background = &H002040&
+      Expand = True
+      Stretch = True
+    }
+    { ThumbnailGrid GridView
+      MoveScaled(0,0,13,84)
+      Mouse = Mouse.Text
+      Expand = True
+      Grid = False
+      Header = GridView.Horizontal
+      Scrollbar = Scroll.Vertical
+      Border = False
+    }
+    { btnLeftCapture Button
+      MoveScaled(147,1,22,11)
+      Background = &H9FFF9F&
+      Text = ("Left Capture")
+    }
+    { btnStereoCapture Button
+      MoveScaled(147,37.8571,22,10)
+      Background = &H9FFF9F&
+      Text = ("Stereo Capture")
+    }
+    { btnRightCapture Button
+      MoveScaled(147,73,22,11)
+      Background = &H9FFF9F&
+      Text = ("Right Capture")
+    }
+  }
+}

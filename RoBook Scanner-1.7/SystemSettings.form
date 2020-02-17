@@ -1,0 +1,98 @@
+# Gambas Form File 2.0
+
+{ Form Form
+  MoveScaled(0,0,59,60)
+  Text = ("System Initializations")
+  { SystemInitializations Frame
+    MoveScaled(0,1,58,58)
+    Text = ("Sytem Initializations")
+    { txtFindOS TextBox
+      MoveScaled(19,4,37,4)
+      Text = ("")
+    }
+    { btnToScanner ToggleButton
+      MoveScaled(26,51,30,5)
+      Text = ("Proceed to RoBook Scanner")
+    }
+    { lblOS TextLabel
+      MoveScaled(2,4,17,3)
+      Text = ("Operating System")
+    }
+    { lblCamera TextLabel
+      MoveScaled(2,16,16,3)
+      Text = ("Libphoto2 Version")
+    }
+    { txtGphoto2 TextBox
+      MoveScaled(19,10,37,4)
+      Text = ("")
+    }
+    { txtLibgphoto2 TextBox
+      MoveScaled(19,15,37,4)
+      Text = ("")
+    }
+    { txtCameraModelLeft TextBox
+      MoveScaled(19,21,19,4)
+      Text = ("")
+    }
+    { lblCamera2 TextLabel
+      MoveScaled(2,10,16,3)
+      Text = ("Gphoto2 Version")
+    }
+    { lblCamera3 TextLabel
+      MoveScaled(2,22,16,3)
+      Text = ("Camera Model")
+    }
+    { lblCamera4 TextLabel
+      MoveScaled(2,45,17,3)
+      Text = ("Camera Available")
+    }
+    { txtNameCameraLeft TextBox
+      MoveScaled(19,27,19,4)
+      Text = ("")
+    }
+    { lblCamera5 TextLabel
+      MoveScaled(2,27,16,3)
+      Text = ("Camera Name")
+    }
+    { txtStatusLeft TextBox
+      MoveScaled(19,39,19,4)
+      Text = ("")
+    }
+    { lblCamera6 TextLabel
+      MoveScaled(2,39,16,3)
+      Text = ("Camera Port Status")
+    }
+    { txtSerialCameraLeft TextBox
+      MoveScaled(19,33,19,4)
+      Text = ("")
+    }
+    { txtNumCamera TextBox
+      MoveScaled(18.8571,45,37,4)
+      Text = ("")
+    }
+    { lblCamera7 TextLabel
+      MoveScaled(2,33,17,3)
+      Text = ("Camera Serial No")
+    }
+    { btnChangeName ToggleButton
+      MoveScaled(1,51,23,5)
+      Text = ("Change Name Camera")
+    }
+    { txtNameCameraRight TextBox
+      MoveScaled(39,27,17,4)
+      Text = ("")
+    }
+    { txtStatusRight TextBox
+      MoveScaled(39,39,17,4)
+      Text = ("")
+    }
+    { txtSerialCameraRight TextBox
+      MoveScaled(39,33,17,4)
+      Text = ("")
+    }
+    { txtCameraModelRight TextBox
+      MoveScaled(39,21,17,4)
+      Text = ("")
+    }
+  }
+}

@@ -1,0 +1,22 @@
+# Gambas Form File 2.0
+
+{ Form Form
+  MoveScaled(0,0,59,31)
+  Text = ("")
+  { OperatorPhoto PictureBox
+    MoveScaled(30,2,27,24)
+  }
+  { TextLabel1 TextLabel
+    MoveScaled(1,24,24,4)
+    Font = Font["Bold,+1"]
+    Text = ("RoBook Operator")
+  }
+  { Button1 Button
+    MoveScaled(29,27,28,3)
+    Text = ("Back to Menu")
+  }
+  { ComboBox1 ComboBox
+    MoveScaled(1,27,25,3)
+    Text = ("User Name")
+  }
+}

@@ -1,0 +1,1639 @@
+' Gambas class file
+
+
+PUBLIC GLOBALcountImage AS Integer
+PUBLIC tempGLOBALcountImage AS Integer
+PUBLIC refreshCount AS Integer
+'PUBLIC addROws AS Integer
+PUBLIC PlotTempCount AS Integer
+
+
+PUBLIC click AS Boolean
+PUBLIC NewGlobalZoomValue AS Integer
+PUBLIC PreviousGlobalZoomValue AS Integer
+'PUBLIC ZeroIndexIsIncluded AS Boolean
+PUBLIC ResetCapture AS Boolean
+
+'contains image Directory 
+PUBLIC $sGlobalImagePath AS String
+PUBLIC $sGlobalScannedPath AS String
+PUBLIC thumbnailPath AS String
+PUBLIC ImageFileName AS String
+'PUBLIC NoFileNameYet AS Boolean
+'PUBLIC StillNoCameraCapture AS Boolean
+
+'Status Flag
+PUBLIC SettingOperation AS String
+PUBLIC CameraOperation AS String
+
+PUBLIC CheckPreviousClick AS String
+PUBLIC checkPresentClick AS String
+PUBLIC ClickStartsLeft AS Boolean
+PUBLIC NOERROR AS Boolean
+
+'--------------------------------------------------------------------------------------------------------------------------------
+'MAIN PROGRAM 
+'--------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB Form_Open()
+'echo
+DIM count AS Integer
+
+'Call system settings
+Functions.FindOS()
+Functions.FindKernel()
+Functions.PAUSE()
+
+Functions.FindGphoto2()
+Functions.PAUSE()
+
+Functions.DetectAvailableCameras()
+Functions.PAUSE()
+' name it
+Functions.NameCameras()
+Functions.PAUSE()
+
+Functions.CameraUSBPortStatus()
+Functions.PAUSE()
+
+Functions.SetCameraON()
+Functions.PAUSE()
+
+Functions.cameraFiring()
+Functions.PAUSE()
+' SQLData.Show
+' SQLData.Visible = TRUE
+' SQLData.Enabled = TRUE
+' SQLite3 database
+' SQL.OpenDatabase("mysql", "localhost", "cobedb", "root", "gambas1234")
+' SQL.Select()
+
+' Initial value
+initializeVALUE()
+Functions.RoBookSay("RoBook Scanner's initialization is Complete!")
+
+END
+
+'------------------------------------------------------------------------------------------------------------
+'BasicInfornations()
+'It contains the basic informations of the scanned project files
+'...need to copy this in the txt file first
+'------------------------------------------------------------------------------------------------------------
+PUBLIC SUB BasicInformations(sPath AS String, CompleteName AS String, CalendarDate AS String)
+   WriteScannedLogFiles($sGlobalScannedPath, "User", CompleteName)
+   WriteScannedLogFiles($sGlobalScannedPath, "Date", CalendarDate)
+   WriteScannedLogFiles($sGlobalScannedPath, "FileName", sPath)
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+'processForFilename() 
+'Processing to create  the FileName 
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB processForFilename() 
+
+              ' NoFileNameYet = FALSE
+       SELECT CASE Message.Question("You have no FileName Yet!", "New", "Open", "Cancel")
+              CASE 1
+                 mnuNewProject_Click()
+                 IF NOT Exist($sGlobalScannedPath) 
+              '   NoFileNameYet = TRUE
+                 ENDIF 
+              CASE 2
+                 mnuOpenProject_Click()
+                 IF NOT Exist($sGlobalScannedPath) 
+                ' NoFileNameYet = TRUE
+                 ENDIF 
+              CASE 3
+                  mnuExit_Click()
+         END SELECT        
+            ' StillNoCameraCapture = TRUE
+
+END
+
+'-------------------------------------------------------------------------------------------------------------
+'ActiveImageFileName()
+'Give the active image filename being used in the camera capture
+'--------------------------------------------------------------------------------------------------------------
+PUBLIC SUB ActiveImageFileName(WhatIsOurImageFileName? AS Boolean)
+DIM defaultFileName AS Boolean = TRUE
+DIM createFileName AS Boolean = FALSE
+
+SELECT CASE WhatIsOurImageFileName?
+CASE defaultFileName 
+
+  
+CASE createFileName
+   SELECT CASE Exist(User.Home & cmd.forThumbnailPath) 
+     CASE FALSE
+             MKDIR User.Home & cmd.forThumbnailPath 
+             MKDIR User.Home & cmd.forBackUpPath 
+             MKDIR User.Home & cmd.forOperatorPhotos 
+      IF (Access(User.Home & cmd.forThumbnailPath, gb.write))
+      
+       Message.Info("Good Luck to your RoBook Scanning!")
+      ELSE 
+       Message.Error("Can't access your home directory")
+       ENDIF 
+    END SELECT
+    
+ thumbnailPath = User.Home & cmd.forThumbnailPath & "/Thumbnail"
+ $sGlobalScannedPath = $sGlobalImagePath & ".scnr"
+ 'NoFileNameYet = FALSE
+ END SELECT 
+
+END 
+
+'---------------------------------------------------------------------------------
+'btnLeftCapture_Click()
+'Left button in the main menu
+'--------------------------------------------------------------------------------
+PUBLIC SUB btnLeftCapture_Click()
+checkPresentClick = "btnLeft"
+  SELECT CASE CameraOperation
+    CASE "shootingMode"
+       ChangeLabel(checkPresentClick, SettingOperation, NewGlobalZoomValue)
+       LeftImageFunctions()
+   CASE "settingMode"
+      ChangeLabel(checkPresentClick, SettingOperation, NewGlobalZoomValue)
+    END SELECT 
+ 
+END
+
+'--------------------------------------------------------------------------------------------------------------------------------- 
+'PUBLIC SUB LeftImageFunctions()
+'--------------------------------------------------------------------------------------------------------------------------------- 
+PUBLIC SUB LeftImageFunctions()
+
+DIM NumberOfPorts AS Integer
+NumberOfPorts = Functions.parsePorts()
+
+
+  SELECT CASE IsItduringPROCESS()
+   CASE TRUE
+'LEFT
+    SELECT CASE CheckPreviousClick 'if left  mouse button!
+     CASE "btnLeft" 'just to make sure there is a left camera!
+       IF (Functions.checkIfNoErrorMessages(checkPresentClick, cmd.ActivityStatusOfCameras)) THEN   'may Left camera
+         PlotSpaces(GLOBALcountImage) 'dito try ma filter pag nag jam ang image...
+         ContinueNextCountImage(TRUE)
+        ENDIF 
+    ' CASE "RIGHT" 'if right mouse button then no space jumping
+    '  IF ((cmd.ActivityStatusOfCameras = "NoRightCamera") AND (FileIsJustRetreived = FALSE)) 'may Left camera
+    '      'PlotSpaces(GLOBALcountImage)
+    '     ' ContinueNextCountImage(TRUE)
+    '      ENDIF
+    ' 
+    ' CASE "Stereo"
+    '    IF ((cmd.ActivityStatusOfCameras = "NoRightCamera") OR (cmd.ActivityStatusOfCameras = "BothCameras")) 'may Left camera
+    '     ' PlotSpaces(GLOBALcountImage) ' walang laktaw dapat
+    '     ' ContinueNextCountImage(TRUE)
+    '      ENDIF 
+    END SELECT 
+ 
+ CASE FALSE ' so just opening the file for the first time ...
+        SELECT CASE Exist($sGlobalScannedPath) ' to check if there is a captured picture already then there is a filename..
+         CASE TRUE
+               'ClickStartsLeft = TRUE
+                IF (ResetCapture) THEN 
+                   ThumbnailGrid.Rows.Count = GLOBALcountImage + 1
+                   ThumbnailGrid[GLOBALcountImage, 0].Text = ""
+                ENDIF  'ResetCapture 
+         
+         CASE FALSE
+             processForFilename()
+             checkPresentClick = "NoButton" 
+         END SELECT 'CheckingFilename()
+  
+END SELECT ' IsItduringPROCESS()
+
+   IF (Functions.checkIfNoErrorMessages(checkPresentClick, cmd.ActivityStatusOfCameras)) THEN 
+      LeftCapture() 'now fires it!!
+  ENDIF 
+
+END
+
+
+'--------------------------------------------------------------------------------------------------------------------------------
+'btnRithCapture_Click()
+'Right button in the main menu
+'-------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB btnRightCapture_Click()
+checkPresentClick = "btnRight"
+  SELECT CASE CameraOperation
+    CASE "shootingMode"
+        ChangeLabel(checkPresentClick, SettingOperation, NewGlobalZoomValue)
+       RightImageFunctions()
+
+   CASE "settingMode"
+       ChangeLabel(checkPresentClick, SettingOperation, NewGlobalZoomValue)
+    END SELECT 
+  
+END
+
+
+PUBLIC SUB RightImageFunctions()
+DIM NumberOfPorts AS Integer
+'RIGHT
+ NumberOfPorts = Functions.parsePorts()
+
+SELECT CASE IsItduringPROCESS() 
+
+CASE TRUE
+   SELECT CASE CheckPreviousClick
+        ' CASE "btnLeft"
+        '     IF ((cmd.ActivityStatusOfCameras = "NoLeftCamera") AND (FileIsJustRetreived = FALSE)) 'check if just starting after retreiving
+        '      'PlotSpaces(GLOBALcountImage)
+        '     ' ContinueNextCountImage(TRUE)
+        '     ENDIF 
+       CASE "btnRight"
+            'left is space 
+       IF (Functions.checkIfNoErrorMessages(checkPresentClick, cmd.ActivityStatusOfCameras)) THEN  'may Right camera
+        PlotSpaces(GLOBALcountImage)
+        ContinueNextCountImage(TRUE)
+        ENDIF 
+        
+       CASE "btnStereo" ' it can be removed...
+        IF (Functions.checkIfNoErrorMessages(checkPresentClick, cmd.ActivityStatusOfCameras)) THEN 
+         PlotSpaces(GLOBALcountImage)
+         ContinueNextCountImage(TRUE)
+
+         ENDIF
+
+   END SELECT 'CheckPreviousClick
+
+CASE FALSE
+
+   SELECT CASE Exist($sGlobalScannedPath)
+     CASE FALSE
+     processForFilename() 
+     checkPresentClick = "NoButton" 
+     CASE TRUE
+         IF (Functions.checkIfNoErrorMessages(checkPresentClick, cmd.ActivityStatusOfCameras)) THEN  'AND (FileIsJustRetreived = FALSE))
+            PlotSpaces(GLOBALcountImage)
+            GLOBALCountImage = 1
+           ENDIF 
+           
+          SELECT CASE ResetCapture ' if resetting display
+             CASE FALSE 
+                    'ResetCapture = FALSE
+              CASE TRUE
+                    IF (Functions.checkIfNoErrorMessages(checkPresentClick, cmd.ActivityStatusOfCameras)) THEN 
+                     ThumbnailGrid.Columns[0].Width = 0.5
+                     ThumbnailGrid[0, 0].Clear()
+                     ThumbnailGrid[0, 0].Refresh()
+                     ThumbnailGrid[0, 0].Text = " [Blank page] " 'please remember the space!
+                     ENDIF   
+                 END SELECT 'ResetCapture
+    
+      END SELECT '(NoFileNameYet = TRUE)
+        
+END SELECT
+
+IF (Functions.checkIfNoErrorMessages(checkPresentClick, cmd.ActivityStatusOfCameras)) THEN 
+RightCapture()
+ENDIF 
+
+END
+
+
+'----------------------------------------------------------------------------------------------------------------------------------
+'btnStereoCapture_Click()
+'Stereo button in the main menu
+'----------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB btnStereoCapture_Click()
+
+checkPresentClick = "btnStereo"
+  SELECT CASE CameraOperation
+    CASE "shootingMode"
+       ChangeLabel(checkPresentClick, SettingOperation, NewGlobalZoomValue)
+       StereoImageFunctions()
+    CASE "settingMode"
+      ChangeLabel(checkPresentClick, SettingOperation, NewGlobalZoomValue)
+    END SELECT 
+
+END
+
+
+PUBLIC SUB StereoImageFunctions()
+Functions.parsePorts()
+
+SELECT CASE IsItduringPROCESS()
+CASE TRUE
+   'RIGHT
+  
+    SELECT CASE CheckPreviousClick
+      CASE "btnLeft"
+         'right  is space
+         IF (Functions.checkIfNoErrorMessages(checkPresentClick, cmd.ActivityStatusOfCameras)) THEN 
+            PlotSpaces(GLOBALcountImage)
+            ContinueNextCountImage(TRUE)
+          
+          ENDIF 
+      
+      CASE "btnRight"
+           'no count
+      CASE "btnStereo"
+           'no count 
+     END SELECT
+  
+CASE FALSE
+   IF NOT Exist($sGlobalScannedPath) 
+          processForFilename()
+          checkPresentClick = "NoButton"
+      ENDIF 
+      IF (ResetCapture) THEN 
+        ThumbnailGrid[GLOBALcountImage, 0].Text = "" 'clear the index image/text if ever
+       ENDIF  'ResetCapture 
+END SELECT 
+    ' 
+    IF (Functions.checkIfNoErrorMessages(checkPresentClick, cmd.ActivityStatusOfCameras)) THEN 
+    StereoCapture()
+    ENDIF 
+    
+END
+
+PUBLIC SUB refresDisplayMono()
+
+refreshCount = refreshCount + 1
+IF refreshCount > 5 THEN 
+      refreshCount = 0
+      DisplayMono.Refresh
+ENDIF 
+END
+
+'----------------------------------------------------------------------------------------------------------------------------------
+'Left camera capture
+'Trigger to shoot left camera
+'-----------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB LeftCapture()
+DIM shellOutput AS String[]
+DIM sPathImage, sPathPaddedImage AS String
+DIM imageCreated AS Boolean
+imageCreated = FALSE
+'Declaration of path
+sPathPaddedImage = CStr($sGlobalImagePath & (Functions.PaddedZero(GLOBALcountImage)) & cmd.jpg)
+sPathImage = CStr($sGlobalImagePath & GLOBALcountImage & cmd.jpg) 'this is for text
+
+refresDisplayMono()
+'before anything else let's parse the shell 
+ shellOutput = Split(Functions.SHOOT(cmd.LeftPort, cmd.FileName & sPathPaddedImage), cmd.NextLine)
+  'Functions.CheckShellString(shellOutput)
+  ' IF ((shellOutput[2] = cmd.EOSFlag) OR (shellOutput[2] = cmd.PSstopFlag)) THEN 
+    IF Functions.CheckShellString(shellOutput) THEN 
+       IF Exist(sPathPaddedImage) THEN
+       imageCreated = TRUE
+       MakeIcon(sPathPaddedImage, thumbnailPath, GLOBALcountImage)
+       WriteScannedLogFiles($sGlobalScannedPath, "path", sPathImage)
+       File.Save($sGlobalScannedPath, FileLogs.txtFileLogs.Text)
+       ContinueNextCountImage(TRUE)
+       CheckPreviousClick = checkPresentClick
+      ' Message.Info("Lusot pa rin??")
+       ENDIF 
+    ENDIF 'shellOutput
+      
+        IF NOT (imageCreated) THEN
+         SELECT CASE CheckPreviousClick
+            CASE "btnLeft"
+              IF IsItduringPROCESS() THEN 
+                DecreaseNextCountImage(TRUE)
+                removePlotSpaces(GLOBALcountImage)
+              ENDIF 
+            CASE "btnRight"
+            'DO NOTHING
+           CASE "btnStereo"
+           'DO NOTHING
+          END SELECT
+             Message.Error("There is no image created!")
+        ELSE 
+        'this is to left ....
+       'ImageProcessing.TextEnhancement(sPathPaddedImage, 3)
+        ImageProcessing.ActivityAfterImageCapture(sPathPaddedImage, cmd.ImageFormat) 'padded
+        Functions.Transfer2Server(cmd.ServerHost, sPathPaddedImage)
+        
+       ENDIF
+       
+END
+
+'----------------------------------------------------------------------------------------------------------------------------------
+'Right camera capture
+'Trigger to shoot right camera
+'-----------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB RightCapture()
+DIM shellOutput AS String[]
+DIM sPathImage, sPathPaddedImage AS String
+DIM imageCreated AS Boolean
+imageCreated = FALSE
+'Declaration of path
+sPathPaddedImage = CStr($sGlobalImagePath & (Functions.PaddedZero(GLOBALcountImage)) & cmd.jpg)
+sPathImage = CStr($sGlobalImagePath & GLOBALcountImage & cmd.jpg)
+refresDisplayMono()
+'before anything else get the active ports
+ shellOutput = Split(Functions.SHOOT(cmd.RightPort, cmd.FileName & sPathPaddedImage), cmd.NextLine) 'padded
+  'IF ((shellOutput[2] = cmd.EOSFlag) OR (shellOutput[2] = cmd.PSstopFlag)) THEN 
+    IF Functions.CheckShellString(shellOutput) THEN 
+      IF Exist(sPathPaddedImage) THEN
+          imageCreated = TRUE
+          MakeIcon(sPathPaddedImage, thumbnailPath, GLOBALcountImage) 'not padded
+          WriteScannedLogFiles($sGlobalScannedPath, "path", sPathImage) 'not padded
+          File.Save($sGlobalScannedPath, FileLogs.txtFileLogs.Text) 'not padded
+          ContinueNextCountImage(TRUE)
+          CheckPreviousClick = checkPresentClick
+ 
+     ENDIF   
+   ENDIF     
+   
+   IF NOT (imageCreated) THEN
+     SELECT CASE CheckPreviousClick
+       CASE "btnLeft"
+       'DO NOTHING
+       CASE "btnRight"
+       DecreaseNextCountImage(TRUE)
+       removePlotSpaces(GLOBALcountImage)
+       CASE "btnStereo"
+       DecreaseNextCountImage(TRUE)
+       removePlotSpaces(GLOBALcountImage)
+     END SELECT
+        Message.Error("There is no image created!")
+     ELSE 
+     'process the image here...
+          ImageProcessing.ActivityAfterImageCapture(sPathPaddedImage, cmd.ImageFormat) 'padded
+          Functions.Transfer2Server(cmd.ServerHost, sPathPaddedImage)
+     ENDIF 
+  
+END
+
+'---------------------------------------------------------------------------------------------------
+'All available camera capture
+'Trigger to shoot both cameras
+'--------------------------------------------------------------------------------------------------
+PUBLIC SUB StereoCapture()
+'stereo
+       'This is the left side camera capture
+        LeftCapture()
+       'This is the right side camera capture
+        RightCapture()
+
+END
+
+'--------------------------------------------------------------------------------
+'PlotScpaces()
+'Marked blank image that results spaces in a Thumbnail index
+'--------------------------------------------------------------------------------
+PUBLIC SUB PlotSpaces(CountSpace AS Integer)
+    ThumbnailGrid.Rows.Count = CountSpace + 2
+    ThumbnailGrid.Row = 10
+    ThumbnailGrid[CountSpace, 0].Clear()
+    ThumbnailGrid[CountSpace, 0].Text = " [Blank page] " 
+END
+
+'--------------------------------------------------------------------------------
+'Remove PlotScpaces()
+'Marked blank image that results spaces in a Thumbnail index
+'--------------------------------------------------------------------------------
+PUBLIC SUB removePlotSpaces(CountSpace AS Integer)
+    ThumbnailGrid.Rows.Count = CountSpace + 2
+    ThumbnailGrid.Row = 10
+    ThumbnailGrid[CountSpace, 0].Clear()
+    ThumbnailGrid[CountSpace, 0].Text = "" 
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+'MakeIcon(imageNum AS Integer, LeftOrRight AS String)
+'Function Making a single icon/thumbnail
+'Create icon either left or right
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB MakeIcon(sPathPaddedImage AS String, thumbPath AS String, cntImage AS Integer)
+       DIM countRows AS Integer
+       DIM sPathImage AS String
+       sPathImage = thumbPath & cntImage & cmd.jpg
+       countRows = cntImage
+       'here IS the menuClick
+       ThumbnailGridSetting(countRows, TRUE)
+      ' Functions.resizeImage(str1, str2)
+      ' ThumbnailGrid[countRows, 0].Picture = Picture.Load(str2)
+       Functions.resizeImage(sPathPaddedImage, sPathImage)
+       ThumbnailGrid[countRows, 0].Picture = Picture.Load(sPathImage)
+       DisplayMono.Picture = Picture.Load(sPathPaddedImage) ' this is padded
+END
+
+
+'--------------------------------------------------------------------------------------------------
+'Write from one page to another page
+'Select odd or even pages-just a thumbnails or with image display
+'--------------------------------------------------------------------------------------------------
+PUBLIC SUB DisplayRecoveredTextImage(imgPath AS String, imageNum AS Integer, includeDisplay AS String)
+   DIM NumRows AS Integer
+   DIM ZeroIndexIsIncluded AS Boolean
+
+  NumRows = imageNum
+  'if GLOBALcountimage is just beginning (zero), yet there is an imagenum already meaning zero is a plot space
+  'if globaimage count is zero
+   'We must check if the image/s do exist in the path before we load it.
+  IF Exist(imgPath) THEN 
+   ThumbnailGridSetting(NumRows, TRUE)
+   Functions.resizeImage(imgPath, thumbnailPath & imageNum & cmd.jpg)
+
+    SELECT CASE includeDisplay
+     CASE "thumbnail"
+       ThumbnailGrid[NumRows, 0].Picture = Picture.Load(thumbnailPath & imageNum & cmd.jpg)
+     CASE "picture"
+       DisplayMono.Picture = Picture.Load(imgPath)    
+     CASE "thumbnail&picture"
+       ThumbnailGrid[NumRows, 0].Picture = Picture.Load(thumbnailPath & imageNum & cmd.jpg)
+       DisplayMono.Picture = Picture.Load(imgPath)
+     END SELECT
+ ELSE  'checked the image now... 
+     Message.Error("No Image Found " & imgPath)
+ ENDIF 
+END
+
+'------------------------------------------------------------------------------------------------------------------------------------
+'ThumbnailGridSetting(NumRow AS Integer, adjust AS Boolean)
+'Thumbnail Grid Setting
+'------------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB ThumbnailGridSetting(NumRow AS Integer, adjust AS Boolean)
+SELECT CASE adjust
+CASE TRUE  
+  ThumbnailGrid.Rows.Count = NumRow + 2 ' change in grid as the image is aquired
+  ThumbnailGrid.Rows[NumRow].Height = 0.85 * cmd.ThumbSizeMono
+CASE FALSE
+  ThumbnailGrid.Rows[NumRow].Height = 0.85 * cmd.ThumbSizeMono
+END SELECT
+
+END
+
+
+'-----------------------------------------------------------------------------------------------------------------------------------
+'ThumbnailGrid_Click()
+'When the grid is click
+'-----------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB ThumbnailGrid_Click()
+
+IF (SettingOperation = "lblInsertPhoto") THEN 
+    tempGLOBALcountImage = GLOBALcountImage
+    addInsertImage(ThumbnailGrid.Row)
+ELSE 
+     TempsequenceGRIDDisplay($sGlobalImagePath, ThumbnailGrid.Row, GLOBALcountImage)
+ENDIF 
+
+END
+
+'---------------------------------------------------------------------------------------------------------------------------
+'TempsequenceGRIDDisplay()
+'Procedure for proper squence of grid display
+'---------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB TempsequenceGRIDDisplay(ImagesPath AS String, GridIndex AS Integer, cntImagesIndex AS Integer)
+DIM IndexWithImageBoundary AS Boolean
+DIM pageIndex AS Integer
+DIM sPathPaddedImage AS String
+
+sPathPaddedImage = ImagesPath & Functions.PaddedZero(GridIndex) & cmd.jpg
+IndexWithImageBoundary = TRUE
+
+'Zero will be the start of the count
+IF ((GridIndex > cntImagesIndex - 1) AND NOT (MarkSpaceIcon(GridIndex))) THEN 
+    Message.Info(" No capture image in the " & GridIndex & "th  index yet ")
+    IndexWithImageBoundary = FALSE ' if pointed to the grid that hasnt picture yet
+ ELSE
+
+  IF (MarkSpaceIcon(GridIndex) AND IndexWithImageBoundary)
+      Message.info("Blank page at " & "[" & GridIndex & "]")
+    ELSE ' if not mark as space
+      DisplayMono.Picture = Picture.Load(sPathPaddedImage)
+     ''Ok wait mark space!
+   ENDIF 
+ 
+ENDIF 
+
+END
+
+'------------------------------------------------------------------------------------------------------------------------------------
+'Insert Delete add
+'Procedure for proper squence of grid display
+'------------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB addInsertImage(InsertPictureInthisIndex AS Integer)
+DIM shellOutput AS String[]
+DIM sPathPaddedImage, thumbImagePath AS String
+DIM insertOK AS Boolean
+thumbImagePath = thumbnailPath & Functions.PaddedZero(InsertPictureInthisIndex) & cmd.jpg
+sPathPaddedImage = $sGlobalImagePath & Functions.PaddedZero(InsertPictureInthisIndex) & cmd.jpg
+'before anything else get the active ports
+Functions.parsePorts() 'here I stopped!
+checkPresentClick = Functions.LeftOrRightPages(InsertPictureInthisIndex)
+      SELECT CASE checkPresentClick
+                 CASE "btnLeft" 
+            
+                         IF (Functions.checkIfNoErrorMessages(checkPresentClick, cmd.ActivityStatusOfCameras)) THEN 
+                         shellOutput = Split(Functions.SHOOT(cmd.LeftPort, cmd.FileName & sPathPaddedImage), cmd.NextLine)
+                         insertOK = TRUE
+                         ENDIF 'END SELECT
+                  CASE "btnRight"
+                         IF (Functions.checkIfNoErrorMessages(checkPresentClick, cmd.ActivityStatusOfCameras)) THEN 
+                         shellOutput = Split(Functions.SHOOT(cmd.RightPort, cmd.FileName & sPathPaddedImage), cmd.NextLine)
+                         insertOK = TRUE
+                         ENDIF 
+      END SELECT 
+ IF (insertOK) THEN 
+            ThumbnailGrid[InsertPictureInthisIndex, 0].Text = "" 'mark blank the index first
+                ' IF ((shellOutput[2] = cmd.EOSFlag) OR (shellOutput[2] = cmd.PSstopFlag)) THEN 
+                IF Functions.CheckShellString(shellOutput) THEN 
+                     'ThumbnailGrid.Rows.Count = tempGLOBALcountImage + 2  '- InsertPictureInthisIndex
+                       ThumbnailGrid.Rows[InsertPictureInthisIndex].Height = 0.85 * cmd.ThumbSizeMono
+                       Functions.resizeImage(sPathPaddedImage, thumbImagePath)
+                       ThumbnailGrid[InsertPictureInthisIndex, 0].Picture = Picture.Load(thumbImagePath) 
+                       DisplayMono.Picture = Picture.Load(sPathPaddedImage)
+                  IF MarkSpaceIcon(InsertPictureInthisIndex) THEN 
+                           Functions.Replace_Str($sGlobalScannedPath, $sGlobalImagePath & InsertPictureInthisIndex & cmd.jpg, $sGlobalImagePath & InsertPictureInthisIndex & cmd.jpg)
+                  ENDIF  'write the changed path
+                    ' WriteScannedLogFiles($sGlobalScannedPath, "path", $sGlobalImagePath & InsertPictureInthisIndex & cmd.jpg) 'not padded
+                ENDIF
+   ENDIF 
+       CameraOperation = "shootingMode"
+       SettingOperation = "lblCapture"
+       ChangeLabel("noButton", SettingOperation, NewGlobalZoomValue)
+ 
+END
+
+'-----------------  ---------------------------------------------------------------------------------
+'MarkSpaceIcon
+'Mark grid if it's space or not
+'--------------------------------------------------------------------------------------------------
+PUBLIC SUB MarkSpaceIcon(count AS Integer) AS Boolean
+ IF (ThumbnailGrid[count, 0].Text = " [Blank page] ") 
+   RETURN TRUE
+ELSE 
+   RETURN FALSE
+ ENDIF
+END
+
+PUBLIC SUB mnuCameraConfigurations_Click()
+   
+END
+
+
+
+PUBLIC SUB mnuCameraZoom_Click()
+
+      IF (NOT (SettingOperation = "lblZoom") AND (CameraOperation = "shootingMode")) THEN 
+              CameraOperation = "settingMode"
+              SettingOperation = "lblZoom"
+             ' ChangeLabel("noButtonPress", SettingOperation, NewGlobalZoomValue)
+       ELSE 
+              CameraOperation = "shootingMode"
+              SettingOperation = "lblCapture"
+       ENDIF 
+   
+     IF (GLOBALcountImage > 0) AND (Functions.detectNumPorts() > 0) THEN 
+                Functions.Replace_Str($sGlobalScannedPath, "Zoom=", "Zoom=" & NewGlobalZoomValue)
+                FileLogs.txtFileLogs.Text = File.Load($sGlobalScannedPath)
+              ELSE 
+               Message.Warning("Adjusting camera zoom without file opened!")
+      ENDIF  ' check GLOBALcountImage
+             
+            ChangeLabel("noButtonPress", SettingOperation, NewGlobalZoomValue)
+            PreviousGlobalZoomValue = NewGlobalZoomValue
+END 
+
+PUBLIC SUB mnuRoBookArm_Click()
+RoBookArm.Visible = TRUE
+END
+
+PUBLIC SUB mnuSerialCom_Click()
+SerialCommPort.Visible = TRUE
+END
+
+PUBLIC SUB mnuCalendar_Click()
+Calendar.Visible = TRUE
+END
+
+PUBLIC SUB mnuAbout_Click()
+About.Visible = TRUE
+END
+
+PUBLIC SUB mnuQuickGuide_Click()
+Help.Visible = TRUE
+END
+
+PUBLIC SUB mnuExit_Click()
+
+MenuStatus("Exit")
+Functions.cameraStatus("OFF")
+Functions.RoBookSay("Thank you for using RoBook Scanner!")
+'Save TO the FTP server
+ ME.Close()
+
+END
+
+PUBLIC SUB mnuFTP_Click()
+'FTP.Visible = TRUE
+
+cmd.ServerHost = "FTP"
+Functions.RoBookSay("RoBook Scanned files will be stored in" & cmd.ServerHost & "server")
+END
+
+PUBLIC SUB mnuConsole_Click()
+FConsole.visible = TRUE
+END
+
+'-----------------------------------------------------------------------------------------------------------------------------------
+'MENU FILE-NEW-OPEN-SAVE-CLOSE
+'-----------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB MenuStatus(mnuStatus AS String)
+'CanViewFile? = TRUE
+'Permanent Tag name
+SELECT CASE mnuStatus
+ CASE "Start"
+' give a page TO view the Log files
+  SELECT CASE Exist($sGlobalScannedPath) 
+      CASE 0
+           ' MKDIR $sGlobalScannedPath
+            File.Save($sGlobalScannedPath, "")
+           'JustReadScannedLogFiles($sGlobalScannedPath)
+            ScannedFileRetriever($sGlobalScannedPath)
+      
+       CASE 1
+            'JustReadScannedLogFiles($sGlobalScannedPath)
+            ScannedFileRetriever($sGlobalScannedPath)
+   END SELECT
+ 
+ CASE "New"
+ 'create a directory
+    SELECT CASE IsItduringPROCESS()
+    CASE TRUE  'in case in the middle of operation you change scanning and records-so it will reset
+    File.Save($sGlobalScannedPath, FileLogs.txtFileLogs.Text)
+    FileLogs.txtFileLogs.Text = "" 'no display yet
+    GLOBALcountImage = 0 ' of course reset the count
+    END SELECT
+    
+    IF Dialog.SaveFile() THEN RETURN
+   
+    $sGlobalImagePath = Dialog.Path 'the global File path "$sGlobalImagePath"
+    $sGlobalScannedPath = $sGlobalImagePath & ".scnr"
+    ActiveImageFileName(FALSE) 'same basic informations
+    BasicInformations($sGlobalScannedPath, "Edwin Gerodiaz", Date(Now) & "-" & Time(Now)) 'this could be added in the text files!
+    WriteScannedLogFiles($sGlobalScannedPath, "Zoom", NewGlobalZoomValue)
+    File.Save($sGlobalScannedPath, FileLogs.txtFileLogs.Text)
+    'NoFileNameYet = FALSE
+ CASE "Save"
+ 'save file
+         Save()
+         
+ CASE "SaveAS"
+         Save(TRUE)
+ CASE "Open"
+ ScannedFileRetriever($sGlobalScannedPath)
+ ' I must include good retrieval here.....
+ 
+ CASE "Close"
+ 'I am just filling this out
+ 
+ CASE "Exit"
+   'IF ((GLOBALcountImage = 1) OR (GLOBALcountImage > 1))
+     SELECT CASE IsItduringPROCESS()
+     CASE TRUE
+       SELECT CASE Functions.SearchString(FileLogs.txtFileLogs.Text, "Finished")
+           CASE TRUE 'if not found
+           Message.Info("Your *.scnr file was saved")
+           WriteScannedLogFiles($sGlobalScannedPath, "Status", "Finished") 
+           END SELECT
+          File.Save($sGlobalScannedPath, FileLogs.txtFileLogs.Text)
+          'if thereis an old back then delete
+          IF Exist(User.Home & cmd.forBackUpPath & Functions.getTheFileName($sGlobalScannedPath) & ".bak")
+              KILL User.Home & cmd.forBackUpPath & Functions.getTheFileName($sGlobalScannedPath) & ".bak"
+          ENDIF 
+          
+          COPY $sGlobalScannedPath TO User.Home & cmd.forBackUpPath & Functions.getTheFileName($sGlobalScannedPath) & ".bak"
+          Functions.Pause
+          FileLogs.txtFileLogs.Text = "" 'So let's clear now the display
+      END SELECT
+  'ENDIF 
+END SELECT
+  
+END 
+
+'-------------------------------------------------------------------------------------------------------------------
+'mnuSaveProject()
+'Marked the change in image files and directories
+'-------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuSaveProject_Click()
+'need to save the system record
+MenuStatus("Save")
+
+END
+
+'------------------------------------------------------------------------------------------------------------------
+'mnuOpenProject()
+'OPEN image files AND directories
+'------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuOpenProject_Click()
+DIM sPath AS String
+'We want to see just the "scanner files-Ok?"
+ Dialog.Title = "Open a Filename"
+ Dialog.Filter = ["*.scnr", "*"]
+' $sGlobalImagePath is now save in the text file 
+  IF Dialog.OpenFile() THEN RETURN
+  sPath = Dialog.path
+  'whatever is that file , i need the base file hehehe!
+  $sGlobalImagePath = Replace$(sPath, ".scnr", "")
+  'check if its a scnr file or a project filename
+  $sGlobalScannedPath = $sGlobalImagePath & ".scnr"
+ ' ReadScannedLogFiles($sGlobalScannedPath, "path")
+   ActiveImageFileName(FALSE)
+   MenuStatus("Open")
+END
+
+'---------------------------------------------------------------------------------------------------------------------
+'Save(Optional bSaveAs As boolen)
+'Save scanned project files
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB Save(OPTIONAL bSaveAs AS Boolean)
+
+'DIM sPath AS String
+  IF bSaveAs OR NOT $sGlobalScannedPath THEN
+    IF Dialog.SaveFile() THEN RETURN
+     $sGlobalScannedPath = Dialog.Path
+  ENDIF
+
+  File.Save($sGlobalScannedPath, FileLogs.txtFileLogs.Text)
+  
+END
+
+'---------------------------------------------------------------------------------------------------------
+'Click CloseScannerFile()
+'Close the scanner active file
+'---------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuCloseProject_Click()
+
+CloseScannerFile()
+
+END
+'---------------------------------------------------------------------------------------------------------
+'CloseScannerFile()
+'Close the scanner active file
+'---------------------------------------------------------------------------------------------------------
+PRIVATE FUNCTION CloseScannerFile() AS Boolean
+
+  'IF $bModify THEN
+     SELECT CASE Message.Question("\n\nFile has been modified. Do you want to save it ?", "Yes", "No", "Cancel")
+       CASE 1
+        Save ' save now all the settings
+        CASE 2 
+      ' it is No -hehehehe
+        CASE 3
+        RETURN TRUE
+    END SELECT
+'  ENDIF
+RETURN TRUE
+END
+
+
+PUBLIC SUB mnuNewProject_Click()
+    Dialog.Title = "New Filename"
+    MenuStatus("New")
+END
+
+'------------------------------------------------------------------------------------------------------------------
+'RetrieveZoom(sspath AS String) AS Integer
+'------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB RetrieveZoom(sspath AS String) AS Integer
+DIM zoomValues AS Integer
+zoomValues = CInt(Replace$(sspath, "Zoom=", ""))
+WriteScannedLogFiles($sGlobalScannedPath, "Zoom", zoomValues)
+RETURN zoomValues
+END
+
+'-------------------------------------------------------------------------------------------------------------------
+'addToFileLogs()
+'Insert String to the textare logs
+'-------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB WriteScannedLogFiles(scannedPath AS String, scannedFileRecord AS String, scannedData AS String) 'AS String
+  DIM strPos AS Integer, endPos AS Integer
+  'DIM TempString AS String
+   FileLogs.txtFileLogs.Insert(scannedFileRecord & "=" & scannedData & "" & "\n") 
+END
+
+'-----------------------------------------------------------------------------------------------------------------------------------
+'ReadScannedFiles(scnrPath AS String)
+'Load the scanner files
+'-----------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB ScannedFileRetriever(scnrPath AS String) AS String
+'load the file
+  DIM countFile AS Integer
+  DIM scnrData AS String 'this should be the file with extensions *.scnr
+  DIM scnrDataParse AS String
+  DIM parseString AS String[]
+  DIM dummyFileName AS String
+  DIM DummyZoom AS String
+  DIM DummyIndex AS Integer[1] 'single array
+  DIM dummypath AS String
+  DIM SAVEDATA AS Boolean
+  
+  Functions.RoBookSay("Let start retreiving your image files!")
+  
+  countFile = 0
+ 'this is now the path
+IF Exist(scnrPath) THEN 
+          scnrData = File.Load(scnrPath) 
+          'Clear for another file loading ...
+          clearTxtLogs()
+'now let's part what it contains about-?
+   SELECT CASE (scnrData = NULL)
+      CASE TRUE
+       Message.Warning("No scanning data or record just a  created file name!")
+       Functions.RoBookSay("No scanning data or record just a  created file name!")
+     CASE FALSE
+       parseString = Split(scnrData, "\n")
+   
+'------------------------------------------------------------------------------------------------------------------
+'------------------------------------------------------------------------------------------------------------------
+  SAVEDATA = FALSE
+    ' DO 
+    FOR EACH scnrDataParse IN parseString
+          RetrieveBasicFunctions(scnrDataParse)
+        SELECT CASE Functions.SearchString(scnrDataParse, "FileName=")
+                 CASE 0
+               WriteANDSaveFiles(scnrDataParse & "\n")
+                   'just here
+               dummyFileName = scnrDataParse
+                 END SELECT
+
+        SELECT CASE Functions.SearchString(scnrDataParse, "Zoom=")
+                CASE 0 'get the latest zoom value
+                DummyZoom = scnrDataParse 
+                 END SELECT
+                                   'need a word "path"
+        SELECT CASE Functions.SearchString(scnrDataParse, "path=") AND Functions.SearchString(scnrDataParse, ".jpg")
+                 CASE 0
+                 'FileLogs.txtFilelogs.Insert(scnrDataParse & "\n") 
+                dummypath = scnrDataParse
+                DummyIndex.Resize(countFile + 1) 'this is the size of the array
+                DummyIndex[countfile] = CInt(Functions.GetNumberInFileName(dummyFileName, dummypath)) 'CInt(countImageFile)
+                DummyIndex.Sort() ' now sort the index
+                GLOBALcountImage = DummyIndex[countfile]
+                countFile = countFile + 1 ' incerement to the next index
+
+               'so we need to check the global count image...
+                SAVEDATA = TRUE
+         END SELECT
+ 
+         SELECT CASE Functions.SearchString(scnrDataParse, "Status=")
+               CASE 0
+              ' Message.Warning("Your file was saved,good!")
+               CASE 1
+               Message.Warning("Your file was unsaved, please save it!")
+            END SELECT
+    NEXT 
+    '  LOOP UNTIL (parseString[countFile] = NULL)
+'-----------------------------------------------------------------------------------------------------------------
+'------------------------------------------------------------------------------------------------------------------
+   END SELECT ' false if the file is there..
+           Functions.cameraZoom(RetrieveZoom(DummyZoom))
+           Functions.PAUSE()
+         IF (SAVEDATA) THEN 
+                   RetrieveAndDisplay(DummyIndex) 
+                   CheckPreviousClick = CStr(Functions.LeftOrRightPages(GLOBALcountImage)) 'positioning the screen image display
+                   ContinueNextCountImage(TRUE) 'GLOBALcountImage = GLOBALcountImage + 1 'increment for the next display
+                   'File.Save(scnrPath, FileLogs.txtFileLogs.Text)  '-- found it unnescessary file in just the opening
+                   'FileIsJustRetreived = TRUE
+            ELSE 
+               Message.Info("Error in retrieving files")
+               Functions.RoBookSay("Error in retrieving files")
+            
+         ENDIF 
+             'END SELECT 
+ELSE 
+    Functions.RoBookSay("Sorry the file is not available")
+ENDIF     
+'--------------------------------------------------------------------------------------------------------------------- 
+'--------------------------------------------------------------------------------------------------------------------- 
+END
+
+
+'------------------------------------------------------------------------------------------------------------------
+'RetrieveBasicFunctions(sspath AS String)
+
+'------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB RetrieveBasicFunctions(sspath AS String)
+       SELECT CASE Functions.SearchString(sspath, "User=")
+        CASE 0
+           'TextBox1.Text = scnrDataParse
+            WriteANDSaveFiles(sspath & "\n")  ' need a temporary files....
+        END SELECT
+
+        SELECT CASE Functions.SearchString(sspath, "Date=")
+         CASE 0
+           WriteANDSaveFiles(sspath & "\n")
+         END SELECT
+END
+
+'------------------------------------------------------------------------------------------------------------------ 
+'RetrieveAndDisplay(countIndexArray AS Integer[])
+'Display and retreived thumbnails and picture
+'------------------------------------------------------------------------------------------------------------------ 
+PUBLIC SUB RetrieveAndDisplay(countIndexArray AS Integer[])
+DIM indexTempCount AS Integer
+DIM tempIndexInteger AS Integer
+DIM NumberOfgapIndex AS Integer
+DIM countTheGapIndex AS Integer
+countTheGapIndex = 0
+
+'COPY $sGlobalScannedPath TO User.Home & cmd.forBackUpPath & Functions.getTheFileName($sGlobalScannedPath) & ".bak"
+ SELECT CASE NOT (countIndexArray[0] = 0) 
+  CASE TRUE
+   PlotSpaces(0)
+  CASE FALSE
+  ' WriteANDSaveFiles("path=" & $sGlobalImagePath & CStr(tempIndexInteger) & cmd.jpg & "\n")
+   ' IF (countIndexArray.count < 9) THEN 
+      DisplayRecoveredTextImage($sGlobalImagePath & Functions.PaddedZero(tempIndexInteger) & cmd.jpg, tempIndexInteger, "thumbnail&picture")
+  '  ENDIF 
+ END SELECT 
+
+'detect blanks spaces
+IF (countIndexArray[countIndexArray.Count - 1] > 1) 
+   FOR indexTempCount = 0 TO countIndexArray.count - 1
+
+      tempIndexInteger = countIndexArray[indexTempCount]
+      
+           IF (indexTempCount > 0) THEN 'plot "space" if no image found
+               NumberOfgapIndex = tempIndexInteger - countIndexArray[indexTempCount - 1]
+               
+                   IF (NumberOfgapIndex > 1) THEN
+                        FOR countTheGapIndex = 1 TO NumberOfgapIndex - 1
+                      '    IF (((countIndexArray.count - tempIndexInteger) < 8)) THEN  
+                            PlotSpaces(countIndexArray[indexTempCount - 1] + countTheGapIndex)
+                        '  ENDIF 
+                        NEXT  'NumberofgapIndex>1
+                        
+                   ENDIF
+            ENDIF
+
+    'detect duplicate pages
+   IF IsThereReplicationsOfPages?(tempIndexInteger) THEN
+      'again the same ,so leave it!
+      IF (NOT IsItduringPROCESS()) THEN
+       
+      ' IF (((countIndexArray.count - tempIndexInteger) < 8)) THEN  
+              DisplayRecoveredTextImage($sGlobalImagePath & Functions.PaddedZero(tempIndexInteger) & cmd.jpg, tempIndexInteger, "thumbnail")
+        '    ENDIF  'yes maybe it is just starting the countImageFile!
+       ENDIF 
+       
+  ELSE  ' if countImageFile is incrementing
+     WriteANDSaveFiles("path=" & $sGlobalImagePath & CStr(tempIndexInteger) & cmd.jpg & "\n")
+     
+     IF (indexTempCount > countIndexArray.Count - 1) THEN  ' display the picture if 
+         ' IF (((countIndexArray.count - tempIndexInteger) < 8)) THEN   
+             DisplayRecoveredTextImage($sGlobalImagePath & Functions.PaddedZero(tempIndexInteger) & cmd.jpg, tempIndexInteger, "thumbnail&picture")
+          ' ENDIF 
+      ELSE 
+        '  IF (((countIndexArray.count - tempIndexInteger) < 8)) THEN   
+              DisplayRecoveredTextImage($sGlobalImagePath & Functions.PaddedZero(tempIndexInteger) & cmd.jpg, tempIndexInteger, "thumbnail")
+          ' ENDIF
+     ENDIF 
+   ENDIF         
+       'now update the counter image
+       UpdateGLOBALimagecount(tempIndexInteger) ' for the replications GLOBALcountimagecounter contains the previous values
+
+  NEXT 
+      DisplayRecoveredTextImage($sGlobalImagePath & Functions.PaddedZero(tempIndexInteger) & cmd.jpg, tempIndexInteger, "thumbnail&picture")
+ELSE 
+'Message.Info(countIndexArray[0])
+ IF (countIndexArray[countIndexArray.Count - 1] = 1) 
+    tempIndexInteger = 1
+    WriteANDSaveFiles("path=" & $sGlobalImagePath & CStr(tempIndexInteger) & cmd.jpg & "\n")
+   ' IF (countIndexArray.count < 9) THEN 
+            DisplayRecoveredTextImage($sGlobalImagePath & Functions.PaddedZero(tempIndexInteger) & cmd.jpg, tempIndexInteger, "thumbnail&picture")
+  '  ENDIF 
+ ENDIF 
+ENDIF 
+
+END
+
+
+'---------------------------------------------------------------------------------------------------------------------------
+'MENU FILES                   MENU FILES               MENU FILES          MENU FILES               MENU FILES
+'--------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB ChangeLabel(LeftOrRight AS String, lblActivity AS String, zoomValue AS Integer) ' zoomValue function has no use...!
+'Message.Info("debug1")
+
+SELECT CASE lblActivity
+ CASE "lblZoom"
+   SELECT CASE LeftOrRight 
+     CASE "btnLeft"
+     NewGlobalZoomValue = NewGlobalZoomValue - 1
+             IF (NewGlobalZoomValue < 0)
+               NewGlobalZoomValue = 0
+             ENDIF 
+     CASE "btnRight"
+     NewGlobalZoomValue = NewGlobalZoomValue + 1
+      IF NewGlobalZoomValue = 20
+        NewGlobalZoomValue = 19
+      ENDIF 
+   END SELECT
+    btnLeftCapture.Text = "Minimize Lens"
+    btnStereoCapture.Text = NewGlobalZoomValue
+    btnRightCapture.Text = "Maximize Lens"
+    
+    Functions.cameraZoom(NewGlobalZoomValue)
+
+   
+ CASE "lblCapture"
+    btnLeftCapture.Text = "Left Capture"
+    btnStereoCapture.Text = "Stereo Capture"
+    btnRightCapture.Text = "Right Capture"
+
+ CASE "lblCrop"
+    btnLeftCapture.Text = "Capture Mode"
+    btnStereoCapture.Text = "Crop Area"
+    btnRightCapture.Text = "Crop"
+    DisplayMono.Visible = FALSE
+   ' Graphics.dwgImage.Visible = TRUE
+   ' dwgImage.Show()
+ '    
+ ' IF (graphicsMode() AND LeftOrRight = "btnLeft") THEN 
+ '    CameraOperation = "shootingMode"
+ '    SettingOperation = "lblCapture"
+ '   ' dwgImage.Visible = FALSE
+ '    DisplayMono.Visible = TRUE
+ '    ChangeLabel(LeftOrRight, SettingOperation, NewGlobalZoomValue)
+ ' ENDIF 
+   ' 
+     ' IF (graphicsMode() AND LeftOrRight = "btnRight") THEN 
+     '  flagGRAPHICS = "crop"
+     ' ENDIF 
+    
+ CASE "lblDeskew"
+   btnLeftCapture.Text = "Capture Mode"
+   'IF ("btnLeft") THEN 
+   btnStereoCapture.Text = "Deskew Angle"
+   btnRightCapture.Text = "Deskew"
+    
+ CASE "lblNormalize"
+   btnLeftCapture.Text = "Capture Mode"
+   'IF ("btnLeft") THEN 
+   btnStereoCapture.Text = "Normalize"
+   btnRightCapture.Text = "Normalize"
+    
+ CASE "lblGreyscale"
+   btnLeftCapture.Text = "Capture Mode"
+   'IF ("btnLeft") THEN 
+   btnStereoCapture.Text = "Greyscale"
+   btnRightCapture.Text = "Greyscale"
+ 
+ CASE "lblInsertPhoto"
+   btnLeftCapture.Text = "Capture Mode"
+   'IF ("btnLeft") THEN 
+   btnStereoCapture.Text = "Insert Photo"
+   btnRightCapture.Text = "Insert Photo"
+ END SELECT 
+
+END
+
+PUBLIC SUB mnuFileLogs_Click()
+ME.Center
+'SELECT CASE (Exist($sGlobalScannedPath) AND (CanViewFile?)) 
+'CASE FALSE
+'Message.Warning("No scanning project files!")
+'CASE TRUE
+'this is for monitoring hte log txt
+FileLogs.Visible = TRUE
+
+'Here is the thing....
+'JustReadScannedLogFiles($sGlobalScannedPath)
+'END SELECT
+
+END
+
+PUBLIC SUB mnuSaveProjectas_Click()
+MenuStatus("SaveAs")
+END
+
+PUBLIC SUB mnuResetCameraImage_Click()
+
+SELECT CASE Message.Question("You are resetting the entire file images??", "Continue", "Cancel")
+CASE 1
+     ResetCapture = TRUE
+     GLOBALCountImage = 0
+     'CheckPreviousClick = "LEFT"
+     File.Save($sGlobalScannedPath, "")
+     clearTxtLogs()
+     'recovered basic informations...
+     BasicInformations($sGlobalScannedPath, "Edwin Gerodiaz", Date(Now) & "-" & Time(Now))
+      WriteScannedLogFiles($sGlobalScannedPath, "Zoom", NewGlobalZoomValue)
+      'File.Save($sGlobalScannedPath, "")
+     File.Save($sGlobalScannedPath, FileLogs.txtFileLogs.Text)
+     'JustReadScannedLogFiles($sGlobalScannedPath)
+     
+CASE 2
+ 'just as usual...
+END SELECT 
+END
+'----------------------------------------------------------------------------------------------------------------------------------
+'IsItduringPROCESS() as Boolean
+' check if there is a process that counts
+'----------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB IsItduringPROCESS() AS Boolean
+IF GLOBALcountImage > 0 
+RETURN TRUE
+ELSE 
+RETURN FALSE
+ENDIF 
+END
+
+
+'-----------------------------------------------------------------------------------------------------------------------------------
+'NoReplicationsOfPages() AS Boolean
+'Test if there is a redundant image that will retreive and displayed
+'-----------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB IsThereReplicationsOfPages?(countImageFile AS Integer) AS Boolean
+IF (countImageFile = GLOBALcountImage)
+RETURN TRUE
+ELSE 
+RETURN FALSE
+ENDIF 
+  
+END
+'-----------------------------------------------------------------------------------------------------------------------------------
+'WriteANDSaveFiles(fileData AS String)
+'We insert any new data in the txtfiles 
+'-----------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB WriteANDSaveFiles(fileData AS String)
+FileLogs.txtFilelogs.Insert(fileData)
+END
+
+'-----------------------------------------------------------------------------------------------------------------------------------
+'update the value of GLOBALimagecount by  the index of retreived images
+'-----------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB UpdateGLOBALimagecount(countImageFile AS Integer)
+  GLOBALcountImage = countImageFile 
+END
+'-----------------------------------------------------------------------------------------------------------------------------------
+'Page number
+'-----------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB pageNumber() AS Integer
+ RETURN GLOBALcountImage - 1
+END
+
+
+'-----------------------------------------------------------------------------------------------------------------------------------
+'ActivityAfterImageCapture()
+'Increment the counting of an image
+'-----------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB ContinueNextCountImage(logicCountImage AS Boolean) AS Integer
+SELECT CASE logicCountImage
+CASE TRUE
+  GLOBALcountImage = GLOBALcountImage + 1
+CASE FALSE
+END SELECT
+RETURN CInt(GLOBALcountImage)
+END
+
+'-----------------------------------------------------------------------------------------------------------------------------------
+'ActivityAfterImageCapture()
+'Decrement the counting of an image
+'-----------------------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB DecreaseNextCountImage(logicCountImage AS Boolean) AS Integer
+SELECT CASE logicCountImage
+CASE TRUE
+  GLOBALcountImage = GLOBALcountImage - 1
+CASE FALSE
+END SELECT
+RETURN CInt(GLOBALcountImage)
+END
+
+PUBLIC SUB clearTxtLogs()
+ FileLogs.txtFileLogs.Text = "" 
+END
+
+
+PUBLIC SUB mnuInsert_Click()
+'DIM Grid AS GridView Here is the chance of the lifetime-heheheh!
+CameraOperation = "settingMode"
+SettingOperation = "lblInsertPhoto"
+ChangeLabel("noButton", SettingOperation, NewGlobalZoomValue)
+END
+
+
+PUBLIC SUB mnuDeskewImage_Click()
+cmd.ImageColor = "Deskew"
+Functions.RoBookSay("Process Color to" & cmd.ImageColor)
+
+' IF Functions.detectPowershot() THEN 
+'     CameraOperation = "settingMode"
+'     SettingOperation = "lblNormalize"
+'     ChangeLabel("noButton", SettingOperation, NewGlobalZoomValue)
+' ENDIF 
+END
+
+
+'================================================================================================================================
+' MYSQL DBASE
+'================================================================================================================================
+PUBLIC SUB AddImageToDBase(indexRow AS Integer, sPathPaddedImage AS String) AS Boolean
+  SQL.Add(sPathPaddedImage)
+  SQL.Select()
+CATCH
+  Message.Warning(ERROR.Text)
+END
+
+
+PUBLIC SUB DelteImageToDBase(indexRow AS Integer) AS Boolean
+  IF indexRow >= 0 THEN
+      SQL.Delete(IndexRow)
+      SQL.Select()
+  END IF
+CATCH
+  Message.Warning(ERROR.Text)
+END
+
+PUBLIC SUB mnuOperator_Click()
+Operator.Show()
+Operator.Center()
+Operator.Enabled = TRUE
+END
+
+
+
+
+'----------------------------------------------------------------------------------------------------------------------
+'initializeVALUE()
+'handling all the global initialization value
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB initializeVALUE()
+
+refreshCount = 0 
+GLOBALcountImage = 0 
+'use to be the button incrementor in Zooming Camera
+NewGlobalZoomValue = 4
+ResetCapture = FALSE
+ActiveImageFileName(TRUE)
+
+CameraOperation = "shootingMode"
+SettingOperation = "lblCapture"
+'ZeroIndexIsIncluded = FALSE
+
+ThumbnailGrid.Enabled = TRUE
+ThumbnailGrid.Columns.Count = 1
+ThumbnailGrid.Columns[0].Text = "Scanned Pages"
+ThumbnailGrid.Columns[0].Width = cmd.ThumbSizeMono
+
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuFlashOff_Click()
+
+  Functions.cameraFlashMode("off")
+  Functions.RoBookSay(" Camera Flash is deactivated!")
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuFlashOn_Click()
+
+  Functions.cameraFlashMode("on")
+  Functions.RoBookSay(" Camera Flash is activated!")
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuOCRImage2Pdf_Click()
+
+cmd.ImageFormat = "OCR"
+Functions.RoBookSay("Process Image to" & cmd.ImageColor)
+
+END
+
+PUBLIC SUB mnuNormalizeImage_Click()
+cmd.ImageColor = "Normalize"
+Functions.RoBookSay("Process Color to" & cmd.ImageFormat)
+
+' IF Functions.detectPowershot() THEN 
+'     CameraOperation = "settingMode"
+'     SettingOperation = "lblNormalize"
+'     ChangeLabel("noButton", SettingOperation, NewGlobalZoomValue)
+' ENDIF 
+END
+
+
+PUBLIC SUB mnuGreyscaleImage_Click()
+cmd.ImageColor = "GreyScale"
+Functions.RoBookSay("Process Color to" & cmd.ImageFormat)
+
+' IF Functions.detectPowershot() THEN 
+'     CameraOperation = "settingMode"
+'     SettingOperation = "lblNormalize"
+'     ChangeLabel("noButton", SettingOperation, NewGlobalZoomValue)
+' ENDIF 
+END
+PUBLIC SUB mnuBitonal_Click()
+
+cmd.ImageFormat = "Bitonal"
+Functions.RoBookSay("Image " & cmd.ImageFormat)
+
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuDejaVu_Click()
+
+cmd.ImageFormat = "DJVU"
+Functions.RoBookSay("Convert to" & cmd.ImageFormat)
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuTiff_Click()
+
+cmd.ImageFormat = "TIFF"
+Functions.RoBookSay("Convert to" & cmd.ImageFormat)
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuBMP_Click()
+
+cmd.ImageFormat = "BMP"
+Functions.RoBookSay("Convert to" & cmd.ImageFormat)
+END
+
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnu_Click()
+
+cmd.ImageFormat = "PDF"
+Functions.RoBookSay("Convert to" & cmd.ImageFormat)
+END
+
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuJPG_Click()
+
+cmd.ImageFormat = "JPG"
+Functions.RoBookSay("Convert to" & cmd.ImageFormat)
+END
+
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuImageBindingpdf_Click()
+
+cmd.ImageFormat = "bindPDF"
+Functions.RoBookSay("Convert to" & cmd.ImageFormat)
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuBindingImagetiff_Click()
+
+cmd.ImageFormat = "bindTIFF"
+Functions.RoBookSay("Convert to" & cmd.ImageFormat)
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuImageBindingdjvu_Click()
+
+cmd.ImageFormat = "bindDJVU"
+Functions.RoBookSay("Convert to" & cmd.ImageFormat)
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuRGB_Click()
+
+cmd.ImageColor = "NormalColor"
+Functions.RoBookSay("Process Color to" & cmd.ImageFormat)
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuModulate_Click()
+
+  cmd.ImageColor = "Modulate"
+Functions.RoBookSay("Process Color  to" & cmd.ImageFormat)
+END
+
+
+PUBLIC SUB mnuDefault_Click()
+
+cmd.ImageFormat = "Enhancement"
+Functions.RoBookSay("Text to" & cmd.ImageFormat)
+
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuAutomaticDeskew_Click()
+cmd.ImageFormat = "AutoDeskew"
+Functions.RoBookSay("Image " & cmd.ImageFormat)
+
+END
+
+PUBLIC SUB mnuManualDeskew_Click()
+
+cmd.ImageFormat = "ManualDeskew"
+Functions.RoBookSay("Image " & cmd.ImageFormat)
+
+END
+PUBLIC SUB mnuOCREnabled_Click()
+
+cmd.ImageFormat = "OCR"
+Functions.RoBookSay("Image " & cmd.ImageFormat)
+
+END
+
+PUBLIC SUB mnuAutoSkew_Click()
+
+' cmd.ImageFormat = "OCRText"
+' Functions.RoBookSay("Image " & cmd.ImageFormat)
+
+END
+
+PUBLIC SUB mnuPageAlignment_Click()
+
+' cmd.ImageFormat = "OCRText"
+' Functions.RoBookSay("Image " & cmd.ImageFormat)
+
+END
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuDewarping_Click()
+
+  
+
+END
+
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuOCRPDF_Click()
+
+cmd.ImageFormat = "OCR"
+Functions.RoBookSay("Image " & cmd.ImageFormat)
+
+END
+'----------------------------------------------------------------------------------------------------------------------
+PUBLIC SUB mnuOCRHTML_Click()
+cmd.ImageFormat = "OCRHtml"
+Functions.RoBookSay("Image " & cmd.ImageFormat)
+  
+
+END
+
+PUBLIC SUB mnuOCRText_Click()
+cmd.ImageFormat = "OCRText"
+Functions.RoBookSay("Image " & cmd.ImageFormat)
+
+END
+
+PUBLIC SUB mnuSystemSettings_Click()
+
+  SystemSettings.Show
+  SystemSettings.Visible = TRUE
+  SystemSettings.Enabled = TRUE
+  SystemSettings.SystemInitializations.Visible = TRUE
+
+END
+
+PUBLIC SUB mnuErrorLogs_Click()
+
+  
+
+END
+
+PUBLIC SUB mnuExecLogs_Click()
+ME.Center
+ShellResults.Visible = TRUE
+
+END
+
+PUBLIC SUB mnuDjVu_Click()
+
+  
+
+END
+
+PUBLIC SUB mnuPDF_Click()
+
+  
+
+END
+
+PUBLIC SUB mnuSelectEnhancer_Click()
+
+  
+
+END
+
+
+PUBLIC SUB mnuGraphicsEditor_Click()
+
+  Graphics.Visible = TRUE
+  Main.Visible = FALSE
+
+END
+
+PUBLIC SUB mnuCleanerOne_Click()
+  cmd.textWasher = "one"
+  cmd.ImageFormat = "TextEnhancement"
+  Functions.RoBookSay("Image " & cmd.ImageFormat)
+END
+
+PUBLIC SUB mnuCleanerTwo_Click()
+  cmd.textWasher = "two"
+  cmd.ImageFormat = "TextEnhancement"
+  Functions.RoBookSay("Image " & cmd.ImageFormat)
+
+END
+
+PUBLIC SUB mnuCleanerThree_Click()
+
+  cmd.textWasher = "three"
+  cmd.ImageFormat = "TextEnhancement"
+  Functions.RoBookSay("Image " & cmd.ImageFormat)
+
+END

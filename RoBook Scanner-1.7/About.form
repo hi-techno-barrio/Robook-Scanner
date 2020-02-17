@@ -1,0 +1,38 @@
+# Gambas Form File 2.0
+
+{ Form Form
+  MoveScaled(0,0,88,18)
+  Background = &HFFFFFF&
+  Text = ("")
+  { Button1 Button
+    MoveScaled(64,12,13,5)
+    Background = &HFFFFFF&
+    Text = ("OK")
+  }
+  { lblRoBook2 Label
+    MoveScaled(18,1,69,6)
+    Font = Font["Bold,+12"]
+    Background = &HFFFFFF&
+    Foreground = &H800040&
+    Text = ("RoBook Scanner")
+    Alignment = Align.Center
+  }
+  { pctrLogo PictureBox
+    MoveScaled(0,1,17,16)
+    Picture = Picture["gambas-robookscan.png"]
+    Stretch = True
+  }
+  { Label2 Label
+    MoveScaled(17,8,37,3)
+    Font = Font["Bold,+3"]
+    Text = ("Christopher M Coballes")
+  }
+  { TextLabel1 TextLabel
+    MoveScaled(18,11,32,3)
+    Text = ("Copyright 2010")
+  }
+  { TextLabel2 TextLabel
+    MoveScaled(18,14,31,3)
+    Text = ("R&D /Innovation  Engineer")
+  }
+}
